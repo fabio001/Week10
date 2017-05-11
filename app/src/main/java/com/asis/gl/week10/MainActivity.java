@@ -15,6 +15,8 @@ import com.google.gson.JsonObject;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.ion.Ion;
 
+import org.json.JSONObject;
+
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -47,7 +49,7 @@ public class MainActivity extends AppCompatActivity {
     public void onClickDownload(View view) {
         Log.d("AsyncTask","Onclik is OK");
         try {
-            URL uri = new URL("http://www.ybu.edu.tr/muhendislik/bilgisayar/contents/images/bos.PNG");
+            URL uri = new URL("http://www.ybu.edu.tr/muhendislik/bilgisayar/contents/images/3855.jpg");
             DownloaderTask dd = new DownloaderTask();
             Log.d("AsyncTask", "Class created");
             dd.execute(uri);
@@ -63,8 +65,20 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void getJoke(View view) {
-        JsonHelper json = new JsonHelper();
-        json.execute();
+        //JsonHelper json = new JsonHelper();
+        //json.execute();
+        Ion.with(this)
+                .load("http://api.icndb.com/jokes/random")
+                .asJsonObject()
+                .setCallback(new FutureCallback<JsonObject>() {
+                    @Override
+                    public void onCompleted(Exception e, JsonObject result) {
+                        processData(result);
+                    }
+                });
+
+
+
     }
     private void getJoke(){
         Ion.with(this)
@@ -77,10 +91,24 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
     }
-    private void processData(JsonObject res){
-        String joke = res.getAsJsonObject("value")
-                .get("joke").getAsString();
-        this.res = joke;
+
+    //  {
+    //      "type": "success",
+    //       "value":
+    //              {
+    //                  "id": 548,
+    //                  "joke": "Product Owners never argue with Chuck Norris after he demonstrates the DropKick feature.",
+    //                  "categories": ["nerdy"]
+    //              }
+    //  }
+    private void processData(JsonObject jsonObj){
+        JsonObject value = jsonObj.getAsJsonObject("value");
+        String joke = value.get("joke").getAsString();
+        txtStatus.setText(joke);
+
+        //String joke = res.getAsJsonObject("value")
+        //        .get("joke").getAsString();
+        //this.res = joke;
     }
 
     private class DownloaderTask extends AsyncTask<URL,Integer,Bitmap>{
@@ -123,7 +151,8 @@ public class MainActivity extends AppCompatActivity {
                 }
             } catch (IOException e) {
                 Log.d("AsyncTask","IOError: " + e.getMessage());
-            } catch (InterruptedException e) {
+            }
+            catch (InterruptedException e) {
                 e.printStackTrace();
             }
             return null;
